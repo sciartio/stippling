@@ -124,7 +124,6 @@ SOFTWARE. -->
             import { hkAdogShader } from './jsm/shaders/hkAdogShader.js';
             import { hkAddNoiseShader } from './jsm/shaders/hkAddNoiseShader.js';
             import { hkHdogShader } from './jsm/shaders/hkHdogShader.js';
-            import { hkLevelShader } from './jsm/shaders/hkLevelShader.js';
 
             import { Vector2 } from 'three';
 
@@ -152,10 +151,6 @@ SOFTWARE. -->
                     SCALE: 4.0, // tanh scale
                     BASE: 0.95, // base value of tau (noise sensitivity)
                     THRES: 0.9999, // binarization threshold
-                },
-                LEVEL: {
-                    LOWER: 0.01,
-                    UPPER: 0.99,
                 },
                 BILATERAL: {
                     SPACE: 3.0,
@@ -187,11 +182,6 @@ SOFTWARE. -->
                 adog2.add(config.ADOG2, 'SCALE', 4.0, 12.0).name('scale').onFinishChange(render);
                 adog2.add(config.ADOG2, 'BASE', 0.9, 0.9999).name('base').onFinishChange(render);
                 adog2.add(config.ADOG2, 'THRES', 0.99, 0.9999).name('thres').onFinishChange(render);
-                
-                let level = gui.addFolder('Level');
-                level.open();
-                level.add(config.LEVEL, 'LOWER', 0.01, 0.5).name('lower').onFinishChange(render);
-                level.add(config.LEVEL, 'UPPER', 0.5, 0.99).name('upper').onFinishChange(render);
                 
                 gui.add({ fun: resetParameters }, 'fun').name('Reset Parameters');
 
@@ -260,7 +250,6 @@ SOFTWARE. -->
                 renderer.setSize( w, h ); // set renderer resolution
 
                 grayShader = new Shader( hkGrayShader );
-                levelShader = new Shader( hkLevelShader );
                 gaussShader = new Shader( hkGaussShader );
                 adogShader = new Shader( hkAdogShader );
                 binarizeShader = new Shader( hkBinarizeShader );
@@ -353,8 +342,6 @@ SOFTWARE. -->
                 hkBilateral(ori, bilat, 3, 0.3);
                 hkGray(bilat, gray);
 
-                hkLevel(gray, gray, config.LEVEL.LOWER, config.LEVEL.UPPER);
-
                 let s = config.ADOG.SIGMA;
                 hkGauss(gray, inner, s); // default: 1.5
                 hkGauss(gray, outer, s * 1.6);
@@ -408,11 +395,6 @@ SOFTWARE. -->
                 gui.__folders.ADoG2.__controllers[1].updateDisplay(); // base
                 gui.__folders.ADoG2.__controllers[2].updateDisplay(); // thres
 
-                config.LEVEL.LOWER = "0.01";
-                config.LEVEL.UPPER = "0.99";
-                gui.__folders.Level.__controllers[0].updateDisplay(); // lower
-                gui.__folders.Level.__controllers[1].updateDisplay(); // upper
-
                 render();
             }
 
@@ -428,14 +410,6 @@ SOFTWARE. -->
             function hkGray(src, dst) {
                 let shader = grayShader;
                 shader.uniforms[ 'u_image' ].value = src.readBuffer.texture;
-                shader.render( renderer, dst );
-            }
-
-            function hkLevel(src, dst, lower, upper) {
-                let shader = levelShader;
-                shader.uniforms[ 'u_image' ].value = src.readBuffer.texture;
-                shader.uniforms[ 'u_lower' ].value = lower;
-                shader.uniforms[ 'u_upper' ].value = upper;
                 shader.render( renderer, dst );
             }
 
